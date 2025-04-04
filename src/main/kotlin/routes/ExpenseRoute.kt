@@ -14,11 +14,7 @@ fun Route.expensesRouting() {
 
     // GET
     get("/expenses") {
-        if(expenses.isEmpty()) {
-            call.respondText { "No expenses found." }
-        } else {
-            call.respond(status = HttpStatusCode.OK, expenses)
-        }
+        call.respond(status = HttpStatusCode.OK, expenses)
     }
 
     // GET BY ID
@@ -36,8 +32,12 @@ fun Route.expensesRouting() {
     post("/expenses") {
         val expense = call.receive<Expense>()
         if(validateExpense(expense, expensesCategories)) {
-            val maxId = expenses.maxOf{ it.id } + 1
-            expenses.add(expense.copy(id = maxId))
+            val lastExpenseId = if(expenses.isEmpty()) {
+                expense.id
+            } else {
+                expenses.maxOf{ it.id } + 1
+            }
+            expenses.add(expense.copy(id = lastExpenseId))
             call.respond(status = HttpStatusCode.OK, MessageResponse("Expense successfully added!"))
         } else {
             call.respond(status = HttpStatusCode.BadRequest, MessageResponse("Expense is not valid. Please try again."))
